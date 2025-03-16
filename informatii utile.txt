@@ -1,0 +1,14 @@
+50-100 imagini – acuratețe de bază (~80%)
+300-500 imagini – recunoaștere mai precisă (~90%)
+1000+ imagini per clasă – acuratețe ridicată (~95%+)
+
+
+Diverse unghiuri & iluminare – Pozează etichetele din mai multe perspective
+Calitatea imaginilor – Evită imagini pixelate sau neclare
+
+
+
+data augmentation (rotire, luminozitate, contrast) pentru a crește artificial numărul de exemple.
+
+
+Ce se intampla daca o eticheta nu exista in model?
