@@ -7,9 +7,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,11 +17,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.tagger.ui.theme.TaggerTheme
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
+import androidx.camera.core.Preview
+
 
 class ScanActivity : ComponentActivity() {
 
@@ -47,7 +53,7 @@ class ScanActivity : ComponentActivity() {
 
     private fun processImageAndNavigate(brand: String, uri: Uri) {
         // TODO: Aici vom trimite imaginea către modelul ML pentru clasificare
-        val result = "Autentic" // Placeholder
+        val result = "Autentic" // Placeholder până la integrarea modelului ML
         val intent = Intent(this@ScanActivity, ResultActivity::class.java)
         intent.putExtra("BRAND_NAME", brand)
         intent.putExtra("RESULT", result)
