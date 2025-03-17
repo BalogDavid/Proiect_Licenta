@@ -2,9 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="true"/>
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -16,26 +13,32 @@
         android:theme="@style/Theme.Tagger"
         tools:targetApi="31">
 
+        <!-- Splash Screen ca ecran de start -->
         <activity
-            android:name=".MainActivity"
+            android:name=".SplashActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.Tagger">
+            android:theme="@style/Theme.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- Main Activity pentru selectarea brandului -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" />
+
+        <!-- Activitate pentru scanare -->
         <activity
             android:name=".ScanActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Tagger" />
+            android:exported="true" />
 
+        <!-- Activitate pentru rezultat -->
         <activity
             android:name=".ResultActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Tagger" />
+            android:exported="true" />
+
     </application>
 
 </manifest>
