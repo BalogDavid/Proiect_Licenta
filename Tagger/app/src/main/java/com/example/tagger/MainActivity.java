@@ -24,10 +24,10 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private int[] brandLogos = {
-            R.drawable.Nike, R.drawable.Balenciaga, R.drawable.Bape, R.drawable.Carhartt,
-            R.drawable.Chanel, R.drawable.Gucci, R.drawable.Jordan, R.drawable.Levis,
-            R.drawable.LouisVuitton, R.drawable.North, R.drawable.OffWhite, R.drawable.RalphLauren,
-            R.drawable.Stussy, R.drawable.Supreme, R.drawable.TommyHilfiger, R.drawable.Versace
+            R.drawable.nike, R.drawable.balenciaga, R.drawable.bape, R.drawable.carhartt,
+            R.drawable.chanel, R.drawable.gucci, R.drawable.jordan, R.drawable.levis,
+            R.drawable.louisvuitton, R.drawable.north, R.drawable.offwhite, R.drawable.ralphlauren,
+            R.drawable.stussy, R.drawable.supreme, R.drawable.tommyhilfiger, R.drawable.versace
     };
 
     @Override

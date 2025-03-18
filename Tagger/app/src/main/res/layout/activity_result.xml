@@ -6,6 +6,16 @@
     android:orientation="vertical"
     android:padding="20dp">
 
+    <!-- Imaginea scanată -->
+    <ImageView
+        android:id="@+id/resultImage"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_launcher_foreground"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Rezultatul analizei -->
     <TextView
         android:id="@+id/resultText"
         android:layout_width="wrap_content"
@@ -15,6 +25,7 @@
         android:textStyle="bold"
         android:padding="10dp"/>
 
+    <!-- Scorul de încredere -->
     <TextView
         android:id="@+id/confidenceScore"
         android:layout_width="wrap_content"
@@ -22,5 +33,13 @@
         android:text="Scor: --%"
         android:textSize="18sp"
         android:padding="10dp"/>
+
+    <!-- Buton pentru revenire la pagina principală -->
+    <Button
+        android:id="@+id/homeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Înapoi la început"
+        android:layout_marginTop="20dp"/>
 
 </LinearLayout>

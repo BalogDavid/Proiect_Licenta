@@ -1,6 +1,8 @@
 package com.example.tagger;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -67,16 +69,25 @@ public class ScanActivity extends AppCompatActivity {
             result -> {
                 if (result.getResultCode() == RESULT_OK) {
                     imageView.setImageURI(imageUri);
-                    navigateToResultActivity();
+                    processImageAndNavigate();
                 } else {
                     Toast.makeText(this, "Capturare anulată", Toast.LENGTH_SHORT).show();
                 }
             });
 
-    private void navigateToResultActivity() {
-        Intent intent = new Intent(ScanActivity.this, ResultActivity.class);
-        intent.putExtra("IMAGE_URI", imageUri.toString());
-        intent.putExtra("BRAND_NAME", brandName);
-        startActivity(intent);
+    private void processImageAndNavigate() {
+        try {
+            LabelClassifier classifier = new LabelClassifier(this);
+            String result = classifier.classifyImage(imageUri.getPath());
+            classifier.close();
+
+            Intent intent = new Intent(ScanActivity.this, ResultActivity.class);
+            intent.putExtra("BRAND_NAME", brandName);
+            intent.putExtra("RESULT", result);
+            startActivity(intent);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Eroare la clasificare!", Toast.LENGTH_SHORT).show();
+        }
     }
 }
