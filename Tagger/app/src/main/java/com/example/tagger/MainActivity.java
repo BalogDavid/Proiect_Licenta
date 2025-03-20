@@ -1,18 +1,13 @@
 package com.example.tagger;
 
-import android.os.Bundle;
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-
-
 import android.content.Intent;
+import android.os.Bundle;
+import android.os.Looper;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.GridView;
-
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.os.HandlerCompat;
+import android.os.Handler;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,14 +30,42 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        GridView gridView = findViewById(R.id.brandGrid);
-        BrandAdapter adapter = new BrandAdapter(this, brandNames, brandLogos);
-        gridView.setAdapter(adapter);
+        // Configuram GridView
+        final GridView gridView = findViewById(R.id.brandGrid);
+        
+        // Optimizări pentru scroll
+        gridView.setFastScrollEnabled(true);
+        gridView.setScrollingCacheEnabled(false);
+        gridView.setAnimationCacheEnabled(false);
+        
+        // Folosim HandlerCompat pentru a încărca adaptorul după ce UI-ul este pregătit
+        // HandlerCompat oferă compatibilitate îmbunătățită pentru versiuni mai noi
+        Handler mainHandler = HandlerCompat.createAsync(Looper.getMainLooper());
+        mainHandler.post(() -> {
+            BrandAdapter adapter = new BrandAdapter(this, brandNames, brandLogos);
+            gridView.setAdapter(adapter);
 
-        gridView.setOnItemClickListener((parent, view, position, id) -> {
-            Intent intent = new Intent(MainActivity.this, ScanActivity.class);
-            intent.putExtra("BRAND_NAME", brandNames[position]);
-            startActivity(intent);
+            gridView.setOnItemClickListener((parent, view, position, id) -> {
+                Intent intent = new Intent(MainActivity.this, ScanActivity.class);
+                intent.putExtra("BRAND_NAME", brandNames[position]);
+                startActivity(intent);
+            });
+            
+            // Ascundem loading indicator dacă există
+            View loadingIndicator = findViewById(R.id.loadingIndicator);
+            if (loadingIndicator != null) {
+                loadingIndicator.setVisibility(View.GONE);
+            }
         });
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Forțăm redraw-ul GridView pentru a rezolva probleme de scrolling
+        GridView gridView = findViewById(R.id.brandGrid);
+        if (gridView != null && gridView.getAdapter() != null) {
+            gridView.invalidateViews();
+        }
     }
 }

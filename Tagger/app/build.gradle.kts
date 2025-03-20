@@ -45,8 +45,10 @@ dependencies {
     implementation ("androidx.core:core-ktx:1.7.0")
     implementation ("com.google.android.material:material:1.4.0")
     implementation ("androidx.camera:camera-core:1.1.0")
+    implementation ("androidx.camera:camera-camera2:1.1.0")
     implementation ("androidx.camera:camera-lifecycle:1.1.0")
     implementation ("androidx.camera:camera-view:1.1.0")
+    implementation ("androidx.camera:camera-extensions:1.1.0")
 
 
     implementation ("org.tensorflow:tensorflow-lite-task-vision:0.4.3")
