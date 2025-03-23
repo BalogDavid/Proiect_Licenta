@@ -36,6 +36,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -47,12 +49,14 @@ import java.util.concurrent.Executors;
 public class ScanActivity extends AppCompatActivity {
     private static final String TAG = "ScanActivity";
     private static final int REQUEST_CODE_PERMISSIONS = 10;
+    private static final int PICK_IMAGE_REQUEST = 100;
     private static final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.CAMERA
     };
 
     private PreviewView previewView;
     private Button captureButton;
+    private Button galleryButton;
     private TextView brandText;
     private ProgressBar cameraProgress;
     private String brandName;
@@ -67,6 +71,7 @@ public class ScanActivity extends AppCompatActivity {
         // Inițializăm view-urile
         previewView = findViewById(R.id.previewView);
         captureButton = findViewById(R.id.captureButton);
+        galleryButton = findViewById(R.id.galleryButton);
         brandText = findViewById(R.id.brandText);
         cameraProgress = findViewById(R.id.cameraProgress);
 
@@ -91,6 +96,11 @@ public class ScanActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Camera se inițializează, vă rugăm așteptați...", Toast.LENGTH_SHORT).show();
             }
+        });
+        
+        // Setăm listener pentru butonul de galerie
+        galleryButton.setOnClickListener(view -> {
+            openGallery();
         });
     }
 
@@ -186,12 +196,27 @@ public class ScanActivity extends AppCompatActivity {
 
         // Încercăm să folosim clasificatorul specific pentru brand
         try {
+            Log.d(TAG, "Inițializăm clasificatorul pentru brandul: " + brandName);
             LabelClassifier classifier = new LabelClassifier(this, brandName);
+            Log.d(TAG, "Clasificăm imaginea de la calea: " + photoFile.getAbsolutePath());
             result = classifier.classifyImage(photoFile.getAbsolutePath());
+            Log.d(TAG, "Rezultat clasificare: " + result);
             classifier.close();
+        } catch (IOException e) {
+            Log.e(TAG, "Eroare IO la clasificare: " + e.getMessage(), e);
+            // Afișăm un mesaj explicit despre eroare
+            String errorMessage = "Eroare la încărcarea modelului: " + e.getMessage();
+            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+            
+            // Setăm un rezultat care indică eroarea
+            result = "Eroare: " + e.getMessage();
         } catch (Exception e) {
-            Log.e(TAG, "Eroare la clasificare: " + e.getMessage(), e);
+            Log.e(TAG, "Eroare generală la clasificare: " + e.getMessage(), e);
             // Folosim rezultatul implicit dacă apare o eroare
+            Toast.makeText(this, "Eroare la clasificare: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            
+            // Setăm un rezultat care indică eroarea
+            result = "Eroare clasificare: " + e.getMessage();
         }
 
         // Navigăm la ecranul de rezultate
@@ -228,5 +253,47 @@ public class ScanActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         cameraExecutor.shutdown();
+    }
+
+    private void openGallery() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Selectează o imagine"), PICK_IMAGE_REQUEST);
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri imageUri = data.getData();
+            
+            try {
+                // Creăm un fișier temporar pentru a stoca imaginea
+                File photoFile = createImageFile();
+                
+                // Copiem imaginea din galerie în fișierul temporar
+                try (InputStream inputStream = getContentResolver().openInputStream(imageUri);
+                     FileOutputStream outputStream = new FileOutputStream(photoFile)) {
+                     
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                    
+                    // Obține URI pentru fișier
+                    Uri photoUri = FileProvider.getUriForFile(ScanActivity.this,
+                            getPackageName() + ".provider", photoFile);
+                    
+                    // Procesează imaginea și navighează la următorul ecran
+                    processImageAndNavigate(photoFile, photoUri);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Eroare la procesarea imaginii din galerie", e);
+                Toast.makeText(this, "Eroare la procesarea imaginii", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

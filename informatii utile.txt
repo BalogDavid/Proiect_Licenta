@@ -6,7 +6,3 @@
 Diverse unghiuri & iluminare – Pozează etichetele din mai multe perspective
 
 data augmentation (rotire, luminozitate, contrast) pentru a crește artificial numărul de exemple.
-
-
-Ce se intampla daca o eticheta nu exista in model?
-Multe tipuri de etichete (ex Nike diferite generatii)

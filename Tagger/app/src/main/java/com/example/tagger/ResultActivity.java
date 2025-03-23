@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -63,15 +64,16 @@ public class ResultActivity extends AppCompatActivity {
         // Afișăm rezultatul parsând String-ul rezultatului
         if (!TextUtils.isEmpty(result)) {
             boolean isAuthentic = result.toLowerCase().contains("authentic") || 
-                                 result.toLowerCase().contains("autentic");
+                                 result.toLowerCase().contains("autentic") ||
+                                 result.equalsIgnoreCase("Autentic (95%)");
             
             // Setăm culoarea textului în funcție de rezultat (verde pentru autentic, roșu pentru fals)
             if (isAuthentic) {
                 resultText.setText(R.string.result_authentic);
-                resultText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+                resultText.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
             } else {
                 resultText.setText(R.string.result_fake);
-                resultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                resultText.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
             }
             
             // Extragem scorul din rezultat (formatul "... (95%)")

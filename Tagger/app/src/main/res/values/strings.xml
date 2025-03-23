@@ -3,6 +3,7 @@
     <string name="brand_logo">Logo brand</string>
     <string name="select_brand">Selectează brandul</string>
     <string name="capture_button">Capturează imaginea</string>
+    <string name="gallery_button">Galerie</string>
     <string name="scan_brand">Scanează: %1$s</string>
     <string name="result_title">Rezultat</string>
     <string name="confidence_score">Scor: %1$.2f%%</string>

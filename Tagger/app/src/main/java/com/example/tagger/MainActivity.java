@@ -12,17 +12,17 @@ import android.os.Handler;
 public class MainActivity extends AppCompatActivity {
 
     private String[] brandNames = {
-            "Nike", "Balenciaga", "Bape", "Carhartt",
+            "Nike", "Adidas", "Balenciaga", "Bape", "Carhartt",
             "Chanel", "Gucci", "Jordan", "Levi's",
             "Louis Vuitton", "The North Face", "Off-White", "Ralph Lauren",
-            "Stussy", "Supreme", "Tommy Hilfiger", "Versace"
+            "Stone Island", "Stussy", "Supreme", "Tommy Hilfiger", "Versace"
     };
 
     private int[] brandLogos = {
-            R.drawable.nike, R.drawable.balenciaga, R.drawable.bape, R.drawable.carhartt,
+            R.drawable.nike, R.drawable.adidas, R.drawable.balenciaga, R.drawable.bape, R.drawable.carhartt,
             R.drawable.chanel, R.drawable.gucci, R.drawable.jordan, R.drawable.levis,
             R.drawable.louisvuitton, R.drawable.north, R.drawable.offwhite, R.drawable.ralphlauren,
-            R.drawable.stussy, R.drawable.supreme, R.drawable.tommyhilfiger, R.drawable.versace
+            R.drawable.stoneisland, R.drawable.stussy, R.drawable.supreme, R.drawable.tommyhilfiger, R.drawable.versace
     };
 
     @Override
@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
         // Optimizări pentru scroll
         gridView.setFastScrollEnabled(true);
         gridView.setScrollingCacheEnabled(false);
-        gridView.setAnimationCacheEnabled(false);
         
         // Folosim HandlerCompat pentru a încărca adaptorul după ce UI-ul este pregătit
         // HandlerCompat oferă compatibilitate îmbunătățită pentru versiuni mai noi
