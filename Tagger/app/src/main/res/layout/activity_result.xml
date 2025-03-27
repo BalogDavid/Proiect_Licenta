@@ -52,12 +52,29 @@
         android:textSize="18sp"
         android:padding="10dp"/>
 
-    <!-- Buton pentru revenire la pagina principală -->
-    <Button
-        android:id="@+id/homeButton"
-        android:layout_width="wrap_content"
+    <!-- Container pentru butoane -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/back_home"
-        android:layout_marginTop="20dp"/>
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="20dp">
+
+        <!-- Buton pentru revenire la pagina principală -->
+        <Button
+            android:id="@+id/homeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/back_home"
+            android:layout_marginEnd="10dp"/>
+
+        <!-- Buton pentru salvare rezultat -->
+        <Button
+            android:id="@+id/saveResultButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/save_result"
+            android:layout_marginStart="10dp"/>
+    </LinearLayout>
 
 </LinearLayout>

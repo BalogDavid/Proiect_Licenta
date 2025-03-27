@@ -1,3 +1,0 @@
-sa fac adaugare de imagini din galerie, poze online
-tensorflow in js, sa incerc cu cod
-stone island

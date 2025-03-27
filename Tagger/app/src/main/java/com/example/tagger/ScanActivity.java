@@ -3,33 +3,36 @@ package com.example.tagger;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.Surface;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
-import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
+import androidx.camera.core.ZoomState;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.lifecycle.LiveData;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -37,8 +40,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -46,12 +47,18 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import android.content.ActivityNotFoundException;
+
 public class ScanActivity extends AppCompatActivity {
     private static final String TAG = "ScanActivity";
     private static final int REQUEST_CODE_PERMISSIONS = 10;
-    private static final int PICK_IMAGE_REQUEST = 100;
     private static final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.CAMERA
+    };
+    
+    // Permisiune pentru accesul la imaginile selectate pentru Android 15
+    private static final String[] PHOTO_PERMISSIONS = {
+        Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
     };
 
     private PreviewView previewView;
@@ -62,6 +69,18 @@ public class ScanActivity extends AppCompatActivity {
     private String brandName;
     private ImageCapture imageCapture;
     private ExecutorService cameraExecutor;
+    private Camera camera;
+    private float zoomRatio = 1.0f;
+    private ScaleGestureDetector scaleGestureDetector;
+    
+    // Launcher pentru permisiuni de imagini
+    private ActivityResultLauncher<String[]> requestImagePermissions;
+    
+    // Launcher pentru selectarea fotografiilor (Photo Picker API)
+    private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
+
+    // Launcher pentru selectarea din documente (Files)
+    private ActivityResultLauncher<Intent> documentLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +99,84 @@ public class ScanActivity extends AppCompatActivity {
         brandText.setText(getString(R.string.scan_label));
 
         cameraExecutor = Executors.newSingleThreadExecutor();
+        
+        // Inițializăm detector pentru gesturi de zoom
+        scaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                if (camera != null) {
+                    float scale = detector.getScaleFactor();
+                    zoomRatio *= scale;
+                    
+                    // Asigurăm că zoom-ul rămâne în limite acceptabile
+                    LiveData<ZoomState> zoomState = camera.getCameraInfo().getZoomState();
+                    ZoomState currentZoomState = zoomState.getValue();
+                    
+                    if (currentZoomState != null) {
+                        float minZoom = currentZoomState.getMinZoomRatio();
+                        float maxZoom = currentZoomState.getMaxZoomRatio();
+                        
+                        // Limităm zoom-ul la valorile minime și maxime
+                        zoomRatio = Math.max(minZoom, Math.min(zoomRatio, maxZoom));
+                        
+                        // Aplicăm zoom-ul
+                        camera.getCameraControl().setZoomRatio(zoomRatio);
+                    }
+                    
+                    return true;
+                }
+                return false;
+            }
+        });
+        
+        // Adăugăm listener pentru gesturi pe previewView
+        previewView.setOnTouchListener((v, event) -> {
+            scaleGestureDetector.onTouchEvent(event);
+            return true;
+        });
+        
+        // Inițializăm launcher-ul pentru permisiuni de imagini
+        requestImagePermissions = registerForActivityResult(
+            new ActivityResultContracts.RequestMultiplePermissions(),
+            result -> {
+                boolean allGranted = true;
+                for (Boolean granted : result.values()) {
+                    allGranted = allGranted && granted;
+                }
+                
+                if (allGranted) {
+                    // Deschide dialogul de selectare a sursei
+                    showImageSourceOptions();
+                } else {
+                    Toast.makeText(this, "Permisiuni necesare pentru accesul la galerie și fișiere", Toast.LENGTH_SHORT).show();
+                }
+            }
+        );
+        
+        // Inițializăm launcher-ul pentru selectarea fotografiilor (Photo Picker API)
+        pickMedia = registerForActivityResult(
+            new ActivityResultContracts.PickVisualMedia(),
+            uri -> {
+                if (uri != null) {
+                    processSelectedImage(uri);
+                } else {
+                    Log.d(TAG, "Nicio imagine selectată");
+                }
+            }
+        );
+
+        // Inițializăm launcher-ul pentru Document Picker
+        documentLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Uri uri = result.getData().getData();
+                    if (uri != null) {
+                        processSelectedImage(uri);
+                    }
+                }
+            }
+        );
 
         // Verificăm permisiunile și pornim camera
         if (allPermissionsGranted()) {
@@ -100,8 +197,99 @@ public class ScanActivity extends AppCompatActivity {
         
         // Setăm listener pentru butonul de galerie
         galleryButton.setOnClickListener(view -> {
-            openGallery();
+            requestGalleryPermissions();
         });
+    }
+    
+    private void requestGalleryPermissions() {
+        // Verificăm dacă toate permisiunile sunt deja acordate
+        boolean allGranted = true;
+        for (String permission : PHOTO_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                allGranted = false;
+                break;
+            }
+        }
+        
+        if (allGranted) {
+            showImageSourceOptions();
+        } else {
+            requestImagePermissions.launch(PHOTO_PERMISSIONS);
+        }
+    }
+    
+    private void showImageSourceOptions() {
+        // Creăm un dialog pentru a alege sursa imaginii
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Selectează sursa");
+        
+        String[] options = {"Galerie", "Fișiere"};
+        
+        builder.setItems(options, (dialog, which) -> {
+            switch (which) {
+                case 0: // Galerie
+                    openPhotoSelector();
+                    break;
+                case 1: // Fișiere
+                    openDocumentPicker();
+                    break;
+            }
+        });
+        
+        builder.show();
+    }
+    
+    private void openPhotoSelector() {
+        // Folosim noua Photo Picker API pentru Android 15
+        pickMedia.launch(new PickVisualMediaRequest.Builder()
+            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+            .build());
+    }
+    
+    private void openDocumentPicker() {
+        // Folosim Document Picker pentru a selecta imagini din fișiere
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        
+        try {
+            documentLauncher.launch(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, "Nu există aplicație pentru selectarea fișierelor", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    private void processSelectedImage(Uri imageUri) {
+        try {
+            // Creăm un fișier temporar pentru a stoca imaginea
+            File photoFile = createImageFile();
+            
+            // Copiem imaginea selectată în fișierul temporar
+            try (InputStream inputStream = getContentResolver().openInputStream(imageUri);
+                FileOutputStream outputStream = new FileOutputStream(photoFile)) {
+                 
+                if (inputStream == null) {
+                    throw new IOException("Nu s-a putut accesa imaginea selectată");
+                }
+                
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                
+                // Obține URI pentru fișier
+                Uri photoUri = FileProvider.getUriForFile(this,
+                        getPackageName() + ".provider", photoFile);
+                
+                // Procesează imaginea și navighează la următorul ecran
+                processImageAndNavigate(photoFile, photoUri);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Eroare la procesarea imaginii selectate: " + e.getMessage(), e);
+            Toast.makeText(this, "Eroare la procesarea imaginii: " + e.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void startCamera() {
@@ -130,7 +318,7 @@ public class ScanActivity extends AppCompatActivity {
 
                 // Asociem camerele la lifecycle
                 cameraProvider.unbindAll();
-                Camera camera = cameraProvider.bindToLifecycle(
+                camera = cameraProvider.bindToLifecycle(
                         this, cameraSelector, preview, imageCapture);
 
                 cameraProgress.setVisibility(View.GONE);
@@ -253,47 +441,5 @@ public class ScanActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         cameraExecutor.shutdown();
-    }
-
-    private void openGallery() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Selectează o imagine"), PICK_IMAGE_REQUEST);
-    }
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri imageUri = data.getData();
-            
-            try {
-                // Creăm un fișier temporar pentru a stoca imaginea
-                File photoFile = createImageFile();
-                
-                // Copiem imaginea din galerie în fișierul temporar
-                try (InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                     FileOutputStream outputStream = new FileOutputStream(photoFile)) {
-                     
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
-                    
-                    // Obține URI pentru fișier
-                    Uri photoUri = FileProvider.getUriForFile(ScanActivity.this,
-                            getPackageName() + ".provider", photoFile);
-                    
-                    // Procesează imaginea și navighează la următorul ecran
-                    processImageAndNavigate(photoFile, photoUri);
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Eroare la procesarea imaginii din galerie", e);
-                Toast.makeText(this, "Eroare la procesarea imaginii", Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 }

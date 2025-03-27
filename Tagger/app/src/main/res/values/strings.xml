@@ -3,14 +3,18 @@
     <string name="brand_logo">Logo brand</string>
     <string name="select_brand">Selectează brandul</string>
     <string name="capture_button">Capturează imaginea</string>
-    <string name="gallery_button">Galerie</string>
+    <string name="gallery_button">Galerie/Fișiere</string>
     <string name="scan_brand">Scanează: %1$s</string>
     <string name="result_title">Rezultat</string>
     <string name="confidence_score">Scor: %1$.2f%%</string>
     <string name="back_home">Înapoi la început</string>
     <string name="result_authentic">Autentic</string>
     <string name="result_fake">Fals</string>
+    <string name="result_inconclusive">Neconcludent</string>
     <string name="scan_label">Scanează eticheta</string>
     <string name="model_nike">nike_model.tflite</string>
     <string name="labels_nike">nike_labels.txt</string>
+    <string name="save_result">Salvează rezultatul</string>
+    <string name="save_to_gallery">Salvează în Galerie</string>
+    <string name="save_to_files">Salvează în Fișiere</string>
 </resources>

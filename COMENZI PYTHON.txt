@@ -1,0 +1,7 @@
+python creeaza_model.py
+
+python testeaza_model.py
+python testeaza_model.py --imagine test_image.jpg
+
+
+python creeaza_model.py --prag 0.8
