@@ -5,7 +5,7 @@ import os
 import argparse
 
 # Afișăm un mesaj despre versiunea TensorFlow
-print("Folosesc TensorFlow pentru testarea modelului TFLite")
+print(f"Folosesc TensorFlow pentru testarea modelului TFLite")
 
 def pregateste_imagine(cale_imagine, dimensiune=128):
     """
@@ -34,14 +34,14 @@ def pregateste_imagine(cale_imagine, dimensiune=128):
     
     return img
 
-def testeaza_imagine_tflite(model_tflite, cale_imagine, prag=0.75):
+def testeaza_imagine_tflite(model_tflite, cale_imagine, prag=0.5):
     """
     Testează o imagine cu modelul TFLite
     
     Parametri:
     - model_tflite: Calea către modelul TFLite
     - cale_imagine: Calea către imaginea de testat
-    - prag: Pragul pentru clasificare
+    - prag: Pragul pentru clasificare (implicit 0.5)
     
     Returnează:
     - eticheta: "Fake" sau "Real"
@@ -90,13 +90,13 @@ def testeaza_imagine_tflite(model_tflite, cale_imagine, prag=0.75):
     
     return eticheta, eticheta_android, probabilitate, incredere
 
-def testeaza_toate_imaginile(model_tflite, prag=0.75):
+def testeaza_toate_imaginile(model_tflite, prag=0.5):
     """
     Testează toate imaginile din directorul curent
     
     Parametri:
     - model_tflite: Calea către modelul TFLite
-    - prag: Pragul pentru clasificare
+    - prag: Pragul pentru clasificare (implicit 0.5)
     """
     # Rezultate așteptate
     rezultate_asteptate = {
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     # Definește argumentele
     parser = argparse.ArgumentParser(description="Testează modelul TFLite de detectare a etichetelor fake/real")
     parser.add_argument("--model", type=str, default="model_android/model_etichete.tflite", help="Calea către modelul TFLite")
-    parser.add_argument("--prag", type=float, default=0.75, help="Pragul pentru clasificare (implicit: 0.75)")
+    parser.add_argument("--prag", type=float, default=0.5, help="Pragul pentru clasificare (implicit: 0.5)")
     parser.add_argument("--imagine", type=str, help="Testează o singură imagine (opțional)")
     args = parser.parse_args()
     

@@ -1,0 +1,4 @@
+Epoci: 50 
+Batch Size: 32
+Rata de Învățare: 0.0001 
+Prag de Clasificare: 0.3
